@@ -1,92 +1,54 @@
-//region: boilerplate
-let button_fill_form_from_json = document.getElementById('button_fill_form_from_json');
-button_fill_form_from_json.onclick = function() {
+let json_textarea = document.getElementById("json_textarea");
+let invoice_btn = document.getElementById('invoice_btn');
 
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        fill_form_now(tabs[0]);
-    });
-};
-
-// Execute the inject.js in a tab and call a method,
-// passing the result to a callback function.
-function injectedMethod(tab, method, callback) {
-    chrome.tabs.executeScript(tab.id, { file: 'inject.js' }, function() {
-        chrome.tabs.sendMessage(tab.id, { method: method }, callback);
-    });
+window.onload = function(e) {
+    chrome.storage.local.get("invoiceData", function(result) { json_textarea.value = result.invoiceData; });
 }
-//endregion boilerplate
 
-//call the injected function fill_form_now
-function fill_form_now(tab) {
-    //pass json through storage
-    chrome.storage.local.set({ fill_form_json: document.getElementById("textarea_json").value },
-        function() {
-            injectedMethod(tab, "fill_form_now", function(response) {
-                return true;
-            })
+function invoke(name)
+{
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) { 
+        chrome.tabs.executeScript(tabs[0].id, { file: 'inject.js' }, function() {
+            chrome.tabs.sendMessage(tabs[0].id, { method: name }, function(response) { return true; });
         });
+    });
 }
 
-
-/* File url read */
-var input_fileurl_value = document.getElementById('input_fileurl');
-let button_fill_form_from_url = document.getElementById('button_fill_form_from_url');
-button_fill_form_from_url.onclick = function() {
-    fileurl_read();
+function init()
+{
+    console.log('### INIT');
+    invoke("do_init");
+    //window.close();
+    setTimeout(function() {
+        add();
+    }, 600);
 }
 
-// read from storage the last url and fill the input:
-var localstorage_key_data_name = 'chext_fill_form_from_json_from_fileurl';
-var storage_fileurl = localStorage.getItem(localstorage_key_data_name);
-if (storage_fileurl) {
-    input_fileurl_value.value = storage_fileurl;
+function add()
+{
+    console.log('### ADD');
+    invoke("do_add");
+    //window.close();
+    setTimeout(function() {
+        sel();
+    }, 600);
 }
 
-function fileurl_read() {
-    // save the url for the next time
-    var storage_fileurl = input_fileurl_value.value
-    localStorage.setItem(localstorage_key_data_name, storage_fileurl);
-
-    if (storage_fileurl && isValidHttpUrl(storage_fileurl)) {
-        getJSON(storage_fileurl,
-            function(err, data) {
-                document.getElementById('textarea_json').value = err ? JSON.stringify(err) : JSON.stringify(data, null, 2);
-
-                if (!err && data) {
-                    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                        fill_form_now(tabs[0]);
-                    });
-                }
-            }
-        );
-    } else if (storage_fileurl) {
-        alert('Invalid URL');
-    }
+function sel()
+{
+    console.log('### SEL');
+    invoke("do_sel");
+    //window.close();
+    setTimeout(function() {
+        fill();
+    }, 600);
 }
 
-function getJSON(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-    xhr.onload = function() {
-        var status = xhr.status;
-        if (status === 200) {
-            callback(null, xhr.response);
-        } else {
-            callback(status, xhr.response);
-        }
-    };
-    xhr.send();
-};
-
-function isValidHttpUrl(string) {
-    let url;
-
-    try {
-        url = new URL(string);
-    } catch (_) {
-        return false;
-    }
-
-    return url.protocol === "http:" || url.protocol === "https:";
+function fill()
+{
+    console.log('### FILL');
+    invoke("do_fill");
+    window.close();
 }
+
+invoice_btn.onclick = init;

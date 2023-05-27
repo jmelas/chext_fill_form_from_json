@@ -13,6 +13,12 @@
         "activeTab",
         "storage"
     ],
+    "externally_connectable": {
+        "matches": ["file:///C:/*"]
+    },
+    "background": {
+        "scripts": ["background.js"]
+    },
     "icons": {
         "16": "icon16.png",
         "32": "icon32.png",
